@@ -1,0 +1,64 @@
+public static void main(String[] args) throws IOException {
+
+        Scanner scanner = new Scanner(System.in);
+//        int flag = 0;
+//        Message toSend;
+
+        //get the localhost Ip
+
+        InetAddress inetAddress = InetAddress.getByName("localhost");
+
+        Socket socket = new Socket(inetAddress, serverPort);
+
+        DataInputStream dis = new DataInputStream(socket.getInputStream());
+        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+
+        //Message thread to maintain simultinous communication
+        Thread sendMessage = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+
+
+                while (true) {
+                    try {
+
+
+                        System.out.println("Type message:(msg:clientName) ");
+                        //message format==> msg:clientName
+                        String message = scanner.nextLine();
+                        System.out.println(message);
+
+
+                        //write the message to output stream
+                        dos.writeUTF(message);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        Thread readMessage = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        //read the message from input stream
+//                            System.out.println("someOne sent you a message.\nReading.......");
+                        String message = dis.readUTF();
+                        System.out.println(message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        //start both the threads
+        sendMessage.start();
+        readMessage.start();
+
+    }

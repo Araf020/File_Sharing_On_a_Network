@@ -1,0 +1,117 @@
+package com.arafat.server;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+public class Server {
+
+    //to store active clients
+    static Vector<ClientHandler> clientList = new Vector<>();
+    static  int clientCounter = 0;
+
+
+    public static void main(String[] args) throws IOException {
+
+        ServerSocket serverSocket = new ServerSocket(9090);
+        System.out.println("Server Started");
+
+        Socket socket;
+
+        while(true){
+            socket = serverSocket.accept();
+            System.out.println("new Client Connected " + socket.getInetAddress());
+
+            //get input and output Stream
+            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+            //create new thread for every client
+            ClientHandler clientHandler = new ClientHandler(socket,"client_"+clientCounter,  dataInputStream, dataOutputStream);
+
+            Thread thread = new Thread(clientHandler);
+            System.out.println("new thread created for client " + "client_"+clientCounter);
+            clientList.add(clientHandler);
+            thread.start();
+
+            clientCounter++;
+
+        }
+    }
+}
+
+class  ClientHandler implements Runnable {
+
+    Scanner scn = new Scanner(System.in);
+
+    private  String name;
+    private  Socket socket;
+    final DataOutputStream dataOutputStream;
+    final DataInputStream dataInputStream;
+    boolean isLoggedIn;
+
+    public ClientHandler(Socket socket, String name, DataInputStream dataInputStream, DataOutputStream dataOutputStream) throws IOException {
+        this.socket = socket;
+        this.dataInputStream  = dataInputStream;
+        this.dataOutputStream = dataOutputStream;
+        this.name = name;
+        this.isLoggedIn = true;
+
+    }
+
+
+    @Override
+    public void run() {
+        // message from client
+        String received;
+
+        while (true) {
+            try {
+                //Read message from client
+                received = dataInputStream.readUTF();
+                System.out.println(received);
+
+                //See if client wants to logout
+                if(received.equals("logout")){
+                    System.out.println("Client " + this.name + " logged out");
+                    isLoggedIn = false;
+                    this.socket.close();
+
+                    break;
+
+                }
+
+                //process the message
+                StringTokenizer stringTokenizer = new StringTokenizer(received, ":");
+                String msg  = stringTokenizer.nextToken();
+                String sendTo = stringTokenizer.nextToken();
+
+                //search the sendTo in the clientList
+                for (ClientHandler client : Server.clientList) {
+                    if (client.name.equals(sendTo) && client.isLoggedIn) {
+                        client.dataOutputStream.writeUTF(this.name + ": " + msg);
+                        break;
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            this.dataOutputStream.close();
+            this.dataInputStream.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+
+        }
+    }
+}

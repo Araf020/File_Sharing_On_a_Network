@@ -60,25 +60,7 @@ public class Client {
         return this.name;
     }
 
-
-
-    /*
-     *
-     * The main method:::
-     * Creates the an instance of Client class with provided server address and TCP port to establish the socket conenction.
-     *
-     * @param
-     * 			Command Line arguments.
-     *
-     * Program Flow :
-     *
-     * 		MAIN --> start() & getKey()
-     * 		start() ---> sendToServer Thread
-     * 		sendToServer Thread ---> EncryptSecretKey() or encryptData(string)
-     *
-     *
-     */
-
+    // ===== THE MAIN METHOD ==========
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
@@ -172,24 +154,7 @@ public class Client {
         public void run(){
             while(true){
                 try{
-
-//                    if (i == 0){
-//                        toSend = null;
-//
-//                        toSend = new Message(encryptAESKey());
-//                        sOutput.writeObject(toSend);
-//                        i =1;
-//                    }
-//
-//                    else{
-//
-//                        System.out.println("CLIENT: Enter OUTGOING Message > ");
-//                        Scanner sc = new Scanner(System.in);
-//                        String s = sc.nextLine();
-//                        toSend = new Message(encryptMessage(s));
-//                        sOutput.writeObject(toSend);
-//                    }
-
+                    //read the message from the user
                     System.out.println(this.getName()+": Enter OUTGOING Message[message(sms or fileName):type(sms or fileType):receiver] > ");
                     Scanner sc = new Scanner(System.in);
                     String s = sc.nextLine();

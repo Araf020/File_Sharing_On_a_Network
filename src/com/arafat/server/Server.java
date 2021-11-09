@@ -24,30 +24,6 @@ public class Server {
     static Vector<ClientHandler> clientList = new Vector<>();
     static  int clientCounter = 0;
 
-    private Cipher keydecipher;
-    private Cipher serveDecrypt;
-    private Cipher serverEncrypt;
-    SecretKey AESKey;
-    int flag;
-
-    byte[] input;
-    int port;
-    private Message sendMsg;
-    private Message rcvdmsg;
-    static String IV = "AAAAAAAAAAAAAAAA";
-
-
-//    public Server(int port){
-//        this.port = port;
-//    }
-
-//    public void initializeServer() throws IOException {
-//        ServerSocket serverSocket = new ServerSocket(9090);
-//        System.out.println("Server started");
-//        Socket socket = serverSocket.accept();
-//
-//        ClientHandler clientHandler = newClie
-//    }
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 

@@ -115,3 +115,26 @@ class  ClientHandler implements Runnable {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DataPack dataPack = (DataPack) dataInputStream.readObject();
+
+                    try {
+                        decryptAESKey(dataPack.getAesKey());
+                        received = decryptMessage(dataPack.getMessage());
+                    }
+                    catch (Exception e){
+                        System.out.println("Error decrypting: " + e.getMessage());
+                    }

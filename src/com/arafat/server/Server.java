@@ -18,11 +18,13 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+// Server class
 public class Server {
 
     //to store active clients
     static Vector<ClientHandler> clientList = new Vector<>();
     static  int clientCounter = 0;
+
 
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -122,6 +124,15 @@ class  ClientHandler implements Runnable {
                         decryptAESKey(dataPack.getAesKey());
                         received = decryptMessage(dataPack.getMessage());
                         finalMsg  = this.name + ":" + received;
+//                        assert received != null;
+                        if (received.equals("logout")) {
+                            System.out.println("Client " + this.name + " logged out");
+                            isLoggedIn = false;
+                            this.socket.close();
+
+                            break;
+
+                        }
 
                     } catch (Exception e) {
                         System.out.println("Error decrypting: " + e.getMessage());
@@ -135,15 +146,7 @@ class  ClientHandler implements Runnable {
                 }
 
 
-                assert received != null;
-                    if (received.equals("logout")) {
-                        System.out.println("Client " + this.name + " logged out");
-                        isLoggedIn = false;
-                        this.socket.close();
 
-                        break;
-
-                    }
 
 
 

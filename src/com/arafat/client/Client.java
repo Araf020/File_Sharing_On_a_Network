@@ -4,6 +4,8 @@
  *  http://www.javamex.com/tutorials/cryptography/rsa_encryption.shtml
  *
  */
+
+//Client class
 package com.arafat.client;
 import com.arafat.message.Message;
 import com.arafat.server.DataPack;
@@ -15,6 +17,7 @@ import java.net.Socket;
 import java.security.*;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Date;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -143,7 +146,7 @@ public class Client {
                     else {
 
                         byte[] file = getDecryptedFile(dataPack.getMessage());
-                        String fileLocation = dataPack.getRcvr()+"_"+getRandomInteger()+"."+dataPack.getMessageType();
+                        String fileLocation = dataPack.getRcvr()+"_"+getDate()+"."+dataPack.getMessageType();
 
                         FileManager.writeFile(file,fileLocation);
 
@@ -488,6 +491,10 @@ public class Client {
     public int getRandomInteger(){
         Random rand = new Random();
         return rand.nextInt(100);
+    }
+
+    public String getDate(){
+        return new Date().toString();
     }
 
 

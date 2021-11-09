@@ -13,8 +13,8 @@ Few GuideLines:
           2. Run Client.java as many as you like(at least two instances)
           4. See the prompt on terminal or console
           5. Message Format: [(sms or fileName):(sms or fileType):(receiver)]
-            e.g:
-               5.1: to send a text message:
-                            hello bro:sms:client_1
-               5.2: to send a file:
-                            send.png:png:client_1
+          e.g:
+          5.1: to send a text message:
+          hello bro:sms:client_1
+          5.2: to send a file:
+          send.png:png:client_1

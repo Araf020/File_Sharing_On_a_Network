@@ -1,2 +1,4 @@
 # Project exclude paths
 /out/
+/src/com/arafat/server/backup
+/src/com/arafat/client/backup

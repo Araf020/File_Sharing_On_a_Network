@@ -12,6 +12,7 @@ public class DataPack implements Serializable {
     private byte[] aesKey;
     private byte[] message;
     private String messageType;
+    private String rcvr;
 
     public DataPack(byte[] message, byte[] aesKey){
         this.aesKey = aesKey;
@@ -23,7 +24,15 @@ public class DataPack implements Serializable {
         this.message = message;
         this.messageType = messageType;
     }
-
+    public DataPack(byte[] message, byte[] aesKey, String messageType, String rcvr){
+        this.aesKey = aesKey;
+        this.message = message;
+        this.messageType = messageType;
+        this.rcvr = rcvr;
+    }
+    public String getRcvr(){
+        return rcvr;
+    }
 
 
     public String getMessageType() {

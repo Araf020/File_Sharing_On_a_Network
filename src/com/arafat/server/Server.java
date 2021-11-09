@@ -95,7 +95,7 @@ class  ClientHandler implements Runnable {
         this.isLoggedIn = true;
         this.flag = 0;
         this.flag_1 = 0;
-        this.messageTye = "text";
+        this.messageTye = "sms";
 
     }
     public String getName() {
@@ -112,14 +112,26 @@ class  ClientHandler implements Runnable {
             try {
                 //Read message from client
 
+                String finalMsg = null;
                 DataPack dataPack = (DataPack) dataInputStream.readObject();
-                try {
-                    decryptAESKey(dataPack.getAesKey());
-                    received = decryptMessage(dataPack.getMessage());
+                String msgType = dataPack.getMessageType();
+                String rcvr = dataPack.getRcvr();
 
+                if (msgType.equalsIgnoreCase("sms")) {
+                    try {
+                        decryptAESKey(dataPack.getAesKey());
+                        received = decryptMessage(dataPack.getMessage());
+                        finalMsg  = this.name + ":" + received;
+
+                    } catch (Exception e) {
+                        System.out.println("Error decrypting: " + e.getMessage());
+                        finalMsg = "error happened";
+                    }
                 }
-                catch (Exception e){
-                    System.out.println("Error decrypting: "+ e.getMessage());
+                else {
+
+                    System.out.println("File transferring..");
+                    finalMsg = "file sent";
                 }
 
 
@@ -136,26 +148,32 @@ class  ClientHandler implements Runnable {
 
 
                     //process the message
-                    StringTokenizer stringTokenizer = new StringTokenizer(received, ":");
-                    String msg = stringTokenizer.nextToken();
+//                    StringTokenizer stringTokenizer = new StringTokenizer(received, ":");
+//                    String msg = stringTokenizer.nextToken();
+//
+//                    String sendTo = stringTokenizer.nextToken();
 
-                    String sendTo = stringTokenizer.nextToken();
+                    String msg = received;
+                    String sendTo = dataPack.getRcvr();
                     System.out.println("After decryption:::: " + "destination:" + sendTo + "> message: " + msg);
 
                     //search the sendTo in the clientList
                     for (ClientHandler client : Server.clientList) {
+
                         if (client.getName().equalsIgnoreCase(sendTo)) {
                             System.out.println("Client found..");
                             System.out.println("Client Name:"+client.getName());
                             System.out.println();
 //                        client.dataOutputStream.writeUTF(this.name + ": " + msg);
-                            String finalMsg = this.name + ": " + msg;
-
+//                            finalMsg = this.name + ": " + msg;
 
                             try {
-
-//
-                                write(new DataPack(encryptMessage(finalMsg),dataPack.getAesKey()),client.dataOutputStream);
+                                if (dataPack.getMessageType().equalsIgnoreCase("sms")) {
+                                    write(new DataPack(encryptMessage(finalMsg), dataPack.getAesKey(),dataPack.getMessageType(),dataPack.getRcvr()), client.dataOutputStream);
+                                }
+                                else {
+                                    write(new DataPack(dataPack.getMessage(),dataPack.getAesKey(),dataPack.getMessageType(),dataPack.getRcvr()), client.dataOutputStream);
+                                }
                             } catch (Exception e) {
                                 System.out.println("Error at encrypting: " + e.getMessage());
                             }

@@ -1,8 +1,12 @@
 package com.arafat.filemanager;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FileManager {
     //complete it for file
@@ -36,15 +40,13 @@ public class FileManager {
         return buffer;
     }
 
-    public void writeFile(String text){
-        try{
-            FileInputStream fileInputStream = new FileInputStream(fileLocation);
-            byte[] buffer = new byte[fileInputStream.available()];
-            fileInputStream.read(buffer);
-            fileInputStream.close();
-            System.out.println(new String(buffer));
-        }catch(Exception e){
-            e.printStackTrace();
+    public static void writeFile(byte[] content,String fileLocation){
+        try {
+            Files.write(Paths.get(fileLocation), content);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error writing: "+ e.getMessage());
         }
     }
 
@@ -70,6 +72,17 @@ public class FileManager {
            catch(Exception e){
                     e.printStackTrace();
            }
+    }
+    public static byte[] getFileBytes(String fileLocation) {
+        byte[] array = null;
+        try {
+         array = Files.readAllBytes(Paths.get(fileLocation));
+        }
+        catch (IOException e){
+            System.out.println("Error on getting the File: "+ e.getMessage());
+        }
+        return array;
+
     }
 
 

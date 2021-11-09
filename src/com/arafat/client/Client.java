@@ -15,7 +15,9 @@ import java.net.Socket;
 import java.security.*;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -26,6 +28,7 @@ public class Client {
     private ObjectOutputStream sOutput;
     private ObjectInputStream sInput;
 
+    private String name;
     private Socket socket;
     private String server;
     private int port;
@@ -43,9 +46,15 @@ public class Client {
 
     // ===== THE CONSTRUCTOR ==========
 
-    Client (String server, int port){
+    public Client (String server, int port){
         this.server = server;
         this.port = port;
+    }
+    public void setName(String name){
+        this.name = name;
+    }
+    public String getName(){
+        return this.name;
     }
 
 
@@ -90,9 +99,11 @@ public class Client {
             serverAddress = args[0];
         }
         Client client = new Client(serverAddress, portNumber);
+        client.setName("arafat");
         client.generateAESkey();
         client.start();
     }
+
 
     /*
      * the start method: establishes a socket connection with the server.
@@ -127,7 +138,17 @@ public class Client {
                     //set the aesKey needed
                     decryptAESKey(dataPack.getAesKey());
                     //decrypt the message
-                    decryptMessage(dataPack.getMessage());
+                    if (dataPack.getMessageType().equalsIgnoreCase("sms"))
+                        decryptMessage(dataPack.getMessage());
+                    else {
+
+                        byte[] file = getDecryptedFile(dataPack.getMessage());
+                        String fileLocation = dataPack.getRcvr()+"_"+getRandomInteger()+"."+dataPack.getMessageType();
+
+                        FileManager.writeFile(file,fileLocation);
+
+
+                    }
 //
                 } catch (Exception e){
                     e.printStackTrace();
@@ -165,10 +186,15 @@ public class Client {
 //                        toSend = new Message(encryptMessage(s));
 //                        sOutput.writeObject(toSend);
 //                    }
-                    System.out.println("CLIENT: Enter OUTGOING Message > ");
+
+                    System.out.println(this.getName()+": Enter OUTGOING Message[message(sms or fileName):type(sms or fileType):receiver] > ");
                     Scanner sc = new Scanner(System.in);
                     String s = sc.nextLine();
-                    sOutput.writeObject(new DataPack(encryptMessage(s), encryptAESKey()));
+
+                    //send the message
+                    send(s);
+//                    sOutput.writeObject(new DataPack(encryptMessage(s), encryptAESKey()));
+
 
                 } catch (Exception e){
                     e.printStackTrace();
@@ -306,6 +332,23 @@ public class Client {
         return cipherText;
     }
 
+    private byte[] encryptMessage(byte[] s) throws NoSuchAlgorithmException, NoSuchPaddingException,
+            InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException,
+            BadPaddingException{
+
+        cipher2 = null;
+        byte[] cipherText = null;
+        cipher2 = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+
+        cipher2.init(Cipher.ENCRYPT_MODE, AESkey, new IvParameterSpec(IV.getBytes()) );
+        long time3 = System.nanoTime();
+        cipherText = cipher2.doFinal(s);
+        long time4 = System.nanoTime();
+        long totalAES = time4 - time3;
+        System.out.println("Time taken by AES Encryption (Nano Seconds) " + totalAES);
+        return cipherText;
+    }
+
 
     /*
      * //=========== Decipher the received Message with AES key =================
@@ -336,6 +379,27 @@ public class Client {
             e.printStackTrace();
             System.out.println ( "Exception generated in decryptData method. Exception Name  :"  + e.getMessage() );
         }
+    }
+
+    private byte[] getDecryptedFile(byte[] encryptedMessage) {
+        cipher2 = null;
+        byte[] file = null;
+        try
+        {
+            cipher2 = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher2.init(Cipher.DECRYPT_MODE, listeningAESkey, new IvParameterSpec(IV.getBytes()));
+            file = cipher2.doFinal(encryptedMessage);
+            System.out.println("CLIENT: INCOMING Message From Server   >> you got a file!" );
+            System.out.println("CLIENT: Enter OUTGOING Message > ");
+        }
+
+        catch(Exception e)
+        {
+            e.getCause();
+            e.printStackTrace();
+            System.out.println ( "Exception generated in decryptData method. Exception Name  :"  + e.getMessage() );
+        }
+        return file;
     }
 
 
@@ -387,6 +451,47 @@ public class Client {
             oin.close();
         }
     }
+
+
+    private  void  send(String msg){
+        StringTokenizer stringTokenizer = new StringTokenizer(msg,":");
+        String msgContent = stringTokenizer.nextToken();
+        String msgType = stringTokenizer.nextToken();
+        String msgRecvr = stringTokenizer.nextToken();
+
+        if(msgType.equalsIgnoreCase("sms")){
+            try {
+//                String fmsg = msgContent + ":" +msgRecvr;
+                this.sOutput.writeObject(new DataPack(encryptMessage(msgContent),encryptAESKey(),msgType,msgRecvr));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            System.out.println("sending file..");
+            byte[] toSend = FileManager.getFileBytes(msgContent);
+            try {
+
+                this.sOutput.writeObject(new DataPack(encryptMessage(toSend), encryptAESKey(), msgType, msgRecvr));
+            }
+            catch (Exception e){
+                System.out.println("can't send the message: "+e.getMessage());
+
+//                this.sOutput.writeObject(new DataPack(encryptMessage(toSend), encryptAESKey(), msgType, msgRecvr));
+            }
+        }
+
+
+    }
+
+    public int getRandomInteger(){
+        Random rand = new Random();
+        return rand.nextInt(100);
+    }
+
+
+
 
 }
 

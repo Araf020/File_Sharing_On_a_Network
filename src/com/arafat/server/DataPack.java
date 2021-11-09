@@ -11,10 +11,23 @@ public class DataPack implements Serializable {
 
     private byte[] aesKey;
     private byte[] message;
+    private String messageType;
 
     public DataPack(byte[] message, byte[] aesKey){
         this.aesKey = aesKey;
         this.message = message;
+    }
+
+    public DataPack(byte[] message, byte[] aesKey, String messageType){
+        this.aesKey = aesKey;
+        this.message = message;
+        this.messageType = messageType;
+    }
+
+
+
+    public String getMessageType() {
+        return messageType;
     }
 
     public byte[] getAesKey(){

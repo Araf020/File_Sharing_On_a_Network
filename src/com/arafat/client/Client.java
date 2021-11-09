@@ -1,253 +1,13 @@
-package com.arafat.client;
-//
-//// Message format is:
-//// Message : recipient
-////here's also another Message handler works to deliver the Message to the recipient
-//
-//import com.arafat.Message.Message;
-//
-//import javax.crypto.*;
-//import javax.crypto.spec.IvParameterSpec;
-//import java.io.*;
-//import java.math.BigInteger;
-//import java.net.InetAddress;
-//import java.net.Socket;
-//import java.security.*;
-//import java.security.spec.RSAPublicKeySpec;
-//import java.util.Scanner;
-//
-////Message format : msg:clientName
-//
-//public class Client {
-//
-//    final static int serverPort = 9090;
-//    private int port;
-//    private Socket socket;
-//    private InetAddress server;
-//    private Cipher cipher_1;
-//    private Cipher cipher_2;
-//    private SecretKey AESkey;
-//    static String IV = "AAAAAAAAAAAAAAAA";
-//    public int flag = 0;
-//    public ObjectInputStream objectInputStream;
-//    public ObjectOutputStream objectOutputStream;
-//
-//    public Client(InetAddress server, int port){
-//        this.server = server;
-//        this.port = port;
-//    }
-//
-//    public  void initialize() throws IOException {
-//
-//       //request connection to the server
-//       socket = new Socket(server,port);
-//       System.out.println("connection accepted at "+ socket.getInetAddress() + " :"+socket.getPort() );
-//
-//       //initialize the streams
-//        objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-//        objectInputStream = new ObjectInputStream(socket.getInputStream());
-//
-//        System.out.println("client streams initialized...");
-//       //start both the threads
-//        new sendMessage().start();
-//        new receiveMessage().start();
-//        System.out.println("client resources initialized...");
-//
-//    }
-//
-//    public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
-//
-//        //get the localhost Ip
-//        InetAddress inetAddress = InetAddress.getByName("localhost");
-//        Client client = new Client(inetAddress,serverPort);
-//        //set the AESKey
-//        client.generateAESKey();
-//        //start the client side
-//        client.initialize();
-//
-//
-//
-//    }
-//
-//
-//    //AES key will be used by server and client to encrypt / decrypt Message
-//
-//    private void generateAESKey() throws NoSuchAlgorithmException {
-//        AESkey = null;
-//        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-//        keyGenerator.init(128);
-//        this.AESkey = keyGenerator.generateKey();
-//        System.out.println("Generated AESKey:" + AESkey);
-//
-//
-//    }
-//
-//    private byte[] encryptAESKey() {
-//
-//        cipher_1 = null;
-//        byte[] key = null;
-//
-//        try {
-//
-//            //get the public key created by RSA keyPair generator
-//
-//            PublicKey publicKey = readPublicKeyFromFile("public.key");
-//            if (publicKey !=null)
-//                System.out.println("public key is not null");
-//            System.out.println("AES key is under process of encryption");
-//
-//            //creating cipher with the client's public key
-//            cipher_1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-//            cipher_1.init(Cipher.ENCRYPT_MODE, publicKey);
-//
-//            long time_1 = System.nanoTime();
-//            //encode the key
-//            key = cipher_1.doFinal(AESkey.getEncoded());
-//
-//            long time_2 = System.nanoTime();
-//            long totalRSATime = time_2 - time_1;
-//            System.out.println("Time taken by Encryption: " + totalRSATime + " nano second");
-//
-//            flag = 1;
-//        } catch (Exception e) {
-//            System.out.println("exception encoding the key" + e.getMessage());
-//            e.printStackTrace();
-//        }
-//
-//        //return the key
-//        return key;
-//    }
-//
-//    private PublicKey readPublicKeyFromFile(String file) throws IOException {
-//
-//        try (ObjectInputStream inputStream = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-//            BigInteger modulus = (BigInteger) inputStream.readObject();
-//            BigInteger exponent = (BigInteger) inputStream.readObject();
-//
-//            RSAPublicKeySpec keySpec = new
-//                    RSAPublicKeySpec(modulus, exponent);
-//
-//            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//
-//            return keyFactory.generatePublic(keySpec);
-//        } catch (Exception e) {
-//            System.out.println("error in reading public key " + e.getMessage());
-//            return null;
-//        }
-//
-//    }
-//
-//    private byte[] encryptMessage(String Message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-//
-//        byte[] cipherText = null;
-//        cipher_2 = null;
-//        cipher_2 = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-//        cipher_2.init(Cipher.ENCRYPT_MODE, AESkey, new IvParameterSpec(IV.getBytes()));
-//
-//        cipherText = cipher_2.doFinal(Message.getBytes());
-//
-//        return cipherText;
-//    }
-//
-//    private void decryptMessage(byte[] encryptedMessage) {
-//        System.out.println("decrypting the Message....");
-//        cipher_2 = null;
-//        byte[] msg = null;
-//
-//        try {
-//            cipher_2 = Cipher.getInstance("AES");
-//            //initializing decryption
-//            cipher_2.init(Cipher.DECRYPT_MODE, AESkey, new IvParameterSpec(IV.getBytes()));
-//
-//            msg = cipher_2.doFinal(encryptedMessage);
-//            System.out.println("Client : Incoming Message: " + new String(msg));
-//            System.out.println("Client: Enter outgoing Message: ");
-//
-//        } catch (Exception e) {
-//            System.out.println("Error in decrypting the Message: " + e.getMessage());
-//        }
-//
-//
-//    }
-//
-//        /*Inner class for sending  and receiving Message*/
-//    class sendMessage extends Thread {
-//        @Override
-//        public void run() {
-//
-//            while (true) {
-//
-//                try {
-//                    //if flag = 0 then send the AES key.
-//                    Message toSend;
-//                    if (flag==0) {
-//
-//                        toSend = new Message(encryptAESKey());
-//                        objectOutputStream.writeObject(toSend);
-//                        flag =1;
-//
-//                    } else {
-//                        Scanner scanner = new Scanner(System.in);
-//                        System.out.println("Type Message:(msg:clientName) ");
-//                        //Message format==> msg:clientName
-//                        String Message = scanner.nextLine();
-//                        System.out.println(Message);
-//                        //encrypting the Message
-//                        toSend = new Message(encryptMessage(Message));
-//                        //sending encrypted Message
-//                        objectOutputStream.writeObject(toSend);
-//
-//                    }
-//
-//                } catch (Exception e) {
-//                    System.out.println("error at sending" + e.getMessage());
-//                    break;
-//                }
-//            }
-//        }
-//    }
-//
-//    class receiveMessage extends Thread {
-//        public void run(){
-//
-//            while (true){
-//                try
-//                {
-//                    //receiving the Message
-//                    System.out.println("reading encrypted Message from stream");
-//                    Message receivedMsg = (Message) objectInputStream.readObject();
-//                    //decrypting the Message
-//                    decryptMessage(receivedMsg.getData());
-//                }
-//                catch (Exception e){
-//                    System.out.println("error at receiving msg: "+ e.getMessage());
-//
-//                }
-//            }
-//        }
-//    }
-//}
-
-
 /**
- * Client.java
- *
- *  Dependency : Sever.java, Message.java, RSA.java
- *
- *  Run Client only after running the Server program.
- *
- * Compile	 	$javac Client.java
- * Run 			$java Client
- *
  *  References:
  *  http://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/CryptoSpec.html
  *  http://www.javamex.com/tutorials/cryptography/rsa_encryption.shtml
  *
  */
-
-
+package com.arafat.client;
 import com.arafat.message.Message;
 import com.arafat.server.DataPack;
+import com.arafat.filemanager.FileManager;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -256,25 +16,10 @@ import java.security.*;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Scanner;
-
-//import java.math.BigInteger;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.crypto.Data;
 
-/*
- *
- * Public class Client.
- *
- *  The Client will send encrypted Message to the server.
- *
- *  First Message sent to server is the AES key.
- *fA
- *  After that client will ask for input. The provided input will be encrypted using the AES key and will be send to server.
- *
- *
- */
 
 public class Client {
 
@@ -307,8 +52,7 @@ public class Client {
 
     /*
      *
-     * The main method
-     *
+     * The main method:::
      * Creates the an instance of Client class with provided server address and TCP port to establish the socket conenction.
      *
      * @param
@@ -330,7 +74,7 @@ public class Client {
 
         int portNumber = 9090;
         if(args.length < 1){
-            System.out.println("#############################################################");
+            System.out.println("=============================================================");
             System.out.println("# 															 ");
             System.out.println("# Usage: $ java Client [sever ip]							 ");
             System.out.println("# 															 ");
@@ -338,7 +82,7 @@ public class Client {
             System.out.println("# 							 								 ");
             System.out.println("# NO ARGUMENT REQUIRED IF SERVER RUNNING ON LOCALHOST		 ");
             System.out.println("# 															 ");
-            System.out.println("#############################################################");
+            System.out.println("=============================================================");
 
             serverAddress = "localhost";
         }
@@ -351,8 +95,7 @@ public class Client {
     }
 
     /*
-     * the start method.
-     * 				establishes a socket connection with the server.
+     * the start method: establishes a socket connection with the server.
      *
      *
      */
@@ -369,17 +112,10 @@ public class Client {
         new listenFromServer().start();
     }
 
-
-
     /*
      *
-     *  listenFromServer method.
-     *  						Will receive the Message from server and call the decryption method.
-     *
-     *
+     *  listenFromServer method Will receive the Message from server and call the decryption method.
      */
-
-
 
     class listenFromServer extends Thread {
         public void run(){
@@ -392,20 +128,7 @@ public class Client {
                     decryptAESKey(dataPack.getAesKey());
                     //decrypt the message
                     decryptMessage(dataPack.getMessage());
-//                    m = (Message) sInput.readObject();
-
-
-//                    if (flag_1 == 0){
-//                        if (m != null) {
-//                            decryptAESKey(m.getData());
-//                            flag_1 = 1;
-//                        }
-//                        else
-//                            System.out.println("no AES key sent!");
-//                    }
-//                    else {
-//                        decryptMessage(m.getData());
-//                    }
+//
                 } catch (Exception e){
                     e.printStackTrace();
                     System.out.println("connection closed");
@@ -418,13 +141,6 @@ public class Client {
 
     /*
      * sendToServer Class. Extends the thread class. Runs continuously.
-     *
-     * 						Will send encrypted Messages to the server.
-     * 						The first Message sent to server will be encrypted AES key. The same key will be used by server to decrypt the future Messages.
-     *
-     * 						Once the AES key is shared, the client Will accept console inputs and encrypt it before sending to server.
-     *
-     *
      */
 
 
@@ -433,22 +149,26 @@ public class Client {
             while(true){
                 try{
 
-                    if (i == 0){
-                        toSend = null;
-
-                        toSend = new Message(encryptAESKey());
-                        sOutput.writeObject(toSend);
-                        i =1;
-                    }
-
-                    else{
-
-                        System.out.println("CLIENT: Enter OUTGOING Message > ");
-                        Scanner sc = new Scanner(System.in);
-                        String s = sc.nextLine();
-                        toSend = new Message(encryptMessage(s));
-                        sOutput.writeObject(toSend);
-                    }
+//                    if (i == 0){
+//                        toSend = null;
+//
+//                        toSend = new Message(encryptAESKey());
+//                        sOutput.writeObject(toSend);
+//                        i =1;
+//                    }
+//
+//                    else{
+//
+//                        System.out.println("CLIENT: Enter OUTGOING Message > ");
+//                        Scanner sc = new Scanner(System.in);
+//                        String s = sc.nextLine();
+//                        toSend = new Message(encryptMessage(s));
+//                        sOutput.writeObject(toSend);
+//                    }
+                    System.out.println("CLIENT: Enter OUTGOING Message > ");
+                    Scanner sc = new Scanner(System.in);
+                    String s = sc.nextLine();
+                    sOutput.writeObject(new DataPack(encryptMessage(s), encryptAESKey()));
 
                 } catch (Exception e){
                     e.printStackTrace();
@@ -461,11 +181,8 @@ public class Client {
 
 
     /*
-     * //============== Create AES Key =================================
-     *
      * generateAESkey method
-     *
-     * 						Called by main method, generates the AES key for encryption / decryption of the Messages exchanged between client and server.
+     *Called by main method, generates the AES key for encryption / decryption of the Messages exchanged between client and server.
      */
 
     void generateAESkey() throws NoSuchAlgorithmException{
@@ -481,13 +198,10 @@ public class Client {
     /*
      * // ====== Read RSA Public key to Encrypt the AES key  ==================
      *
-     * encryptAESKey method.
-     *
-     * 						Will encrypt the AES key generated by generateAESkey method. It will also calculate the time taken for encrypting the AES key using RSA encryption method.
-     *
-     * 						To encrypt the AES key, this method will read RSA public key from the RSA public = private key pairs saved in the same directory.
-     *
-     * 						Dependency: the public key  file "public.key" should be saved in the same directory. (Performed by server.java class)
+     *encryptAESKey method:
+     *Will encrypt the AES key generated by generateAESkey method. It will also calculate the time taken for encrypting the AES key using RSA encryption method.
+     *To encrypt the AES key, this method will read RSA public key from the RSA public = private key pairs saved in the same directory.
+     *Dependency: the public key  file "public.key" should be saved in the same directory. (Performed by server.java class)
      *
      */
 
@@ -561,20 +275,24 @@ public class Client {
     /*
      * //============= Encrypt Data to send =================
      *
-     * encryptMessage method
-     * 						Encrypts the string input using AES encryption with AES key generated by generateAESkey method.
+     * encryptMessage method Encrypts the string input using AES encryption with AES key generated by generateAESkey method.
      *
-     * @param 	String s
-     * 					Input string to encrypt
+     * @param Input string to encrypt
      *
      * Returns byte array as output.
      *
      */
 
+    private void receiveFile(InputStream inputStream, OutputStream outputStream){
+
+        FileManager.copyFile(inputStream,outputStream);
+    }
+
 
     private byte[] encryptMessage(String s) throws NoSuchAlgorithmException, NoSuchPaddingException,
             InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException,
             BadPaddingException{
+
         cipher2 = null;
         byte[] cipherText = null;
         cipher2 = Cipher.getInstance("AES/CBC/PKCS5PADDING");
@@ -616,7 +334,7 @@ public class Client {
         {
             e.getCause();
             e.printStackTrace();
-            System.out.println ( "Exception genereated in decryptData method. Exception Name  :"  + e.getMessage() );
+            System.out.println ( "Exception generated in decryptData method. Exception Name  :"  + e.getMessage() );
         }
     }
 
@@ -644,10 +362,7 @@ public class Client {
     /*
      *  // ===================== Reading RSA public key from  file ===============
      *
-     * readPublicKeyFromFile method.
-     *
-     * 								Will read the RSA public key from the file "public.key"
-     * 								on the same directory to encrypt the AES key.
+     * readPublicKeyFromFile method Will read the RSA public key from the file "public.key" on the same directory to encrypt the AES key.
      *
      */
 

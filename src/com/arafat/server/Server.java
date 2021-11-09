@@ -108,6 +108,7 @@ class  ClientHandler implements Runnable {
     private Cipher keyDecipher;
     private SecretKey AESKey;
     static String IV = "AAAAAAAAAAAAAAAA";
+    public String messageTye;
 
 
     public ClientHandler(Socket socket, String name, ObjectInputStream dataInputStream, ObjectOutputStream dataOutputStream) throws IOException {
@@ -118,7 +119,7 @@ class  ClientHandler implements Runnable {
         this.isLoggedIn = true;
         this.flag = 0;
         this.flag_1 = 0;
-        System.out.println("client handler initiated for "+ this.name);
+        this.messageTye = "text";
 
     }
     public String getName() {
@@ -131,38 +132,22 @@ class  ClientHandler implements Runnable {
         // message from client
         String received = null;
 
-        Message rcvdmsg = null;
         while (true) {
-//            System.out.println(" i m in clientHandler thread..");
             try {
                 //Read message from client
-//                received = dataInputStream.readUTF();
-//                System.out.println(received);
-                System.out.println("Listening for msg");
 
-                rcvdmsg = (Message) dataInputStream.readObject();
+                DataPack dataPack = (DataPack) dataInputStream.readObject();
+                try {
+                    decryptAESKey(dataPack.getAesKey());
+                    received = decryptMessage(dataPack.getMessage());
 
-                if (flag ==0){
-                    this.encryptedAESkey = rcvdmsg;
-                    if (rcvdmsg.getData() != null){
-                        decryptAESKey(rcvdmsg.getData());
-                        flag++;
-                    }
-                    else {
-                        System.out.println("AES key not received");
-                        System.exit(1);
-                    }
                 }
-                else {
-                    if (rcvdmsg.getData() != null) {
-                        try {
+                catch (Exception e){
+                    System.out.println("Error decrypting: "+ e.getMessage());
+                }
 
-                            received = decryptMessage(rcvdmsg.getData());
-                        } catch (Exception e) {
-                            System.out.println("Error decrypting" + e.getMessage());
-                        }
-                    }
-                    assert received != null;
+
+                assert received != null;
                     if (received.equals("logout")) {
                         System.out.println("Client " + this.name + " logged out");
                         isLoggedIn = false;
@@ -172,16 +157,7 @@ class  ClientHandler implements Runnable {
 
                     }
 
-                    //See if client wants to logout
-//                assert received != null;
-//                if(received.equals("logout")){
-//                    System.out.println("Client " + this.name + " logged out");
-//                    isLoggedIn = false;
-//                    this.socket.close();
-//
-//                    break;
-//
-//                }
+
 
                     //process the message
                     StringTokenizer stringTokenizer = new StringTokenizer(received, ":");
@@ -202,19 +178,8 @@ class  ClientHandler implements Runnable {
 
                             try {
 
-//                                if (flag_1 == 0){
-                                    //send the AESkey
-//                                    write(encryptedAESkey,client.dataOutputStream);
-//                                    wait(500);
-//                                   System.out.println("AES key sent");
-//                                    flag_1 = 1;
-
-//                                }
-//                                else
-                                     //send the message
-//                                     write(new Message(encryptMessage(finalMsg)),client.dataOutputStream);
 //
-                                write(new DataPack(encryptMessage(finalMsg),encryptedAESkey.getData()),client.dataOutputStream);
+                                write(new DataPack(encryptMessage(finalMsg),dataPack.getAesKey()),client.dataOutputStream);
                             } catch (Exception e) {
                                 System.out.println("Error at encrypting: " + e.getMessage());
                             }
@@ -225,7 +190,7 @@ class  ClientHandler implements Runnable {
                             System.out.println("client_name:"+ client.getName()+", loginStatus: " + client.isLoggedIn);
                         }
                     }
-                }
+//                }
 
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();

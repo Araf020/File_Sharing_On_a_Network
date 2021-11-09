@@ -1,4 +1,4 @@
-package com.arafat.server;
+package com.arafat.message;
 
 import com.arafat.message.Message;
 

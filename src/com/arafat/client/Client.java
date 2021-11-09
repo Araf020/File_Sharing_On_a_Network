@@ -6,7 +6,7 @@
  */
 package com.arafat.client;
 import com.arafat.message.Message;
-import com.arafat.server.DataPack;
+import com.arafat.message.DataPack;
 import com.arafat.filemanager.FileManager;
 
 import java.io.*;
@@ -15,6 +15,9 @@ import java.net.Socket;
 import java.security.*;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -143,7 +146,7 @@ public class Client {
                     else {
 
                         byte[] file = getDecryptedFile(dataPack.getMessage());
-                        String fileLocation = dataPack.getRcvr()+"_"+getRandomInteger()+"."+dataPack.getMessageType();
+                        String fileLocation = dataPack.getRcvr()+"_"+getDateTime()+"."+dataPack.getMessageType();
 
                         FileManager.writeFile(file,fileLocation);
 
@@ -488,6 +491,14 @@ public class Client {
     public int getRandomInteger(){
         Random rand = new Random();
         return rand.nextInt(100);
+    }
+
+    public String getDateTime(){
+
+        return new Date().toString();
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+//        Date date = new Date();
+//        return dateFormat.format(date);
     }
 
 

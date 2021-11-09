@@ -1,5 +1,6 @@
 package com.arafat.server;
 
+import com.arafat.message.DataPack;
 import com.arafat.message.Message;
 import com.arafat.security.RSA;
 
@@ -15,7 +16,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 public class Server {
@@ -123,6 +123,16 @@ class  ClientHandler implements Runnable {
                         received = decryptMessage(dataPack.getMessage());
                         finalMsg  = this.name + ":" + received;
 
+//                        assert received != null;
+                        if (received.equals("logout")) {
+                            System.out.println("Client " + this.name + " logged out");
+                            isLoggedIn = false;
+                            this.socket.close();
+
+                            break;
+
+                        }
+
                     } catch (Exception e) {
                         System.out.println("Error decrypting: " + e.getMessage());
                         finalMsg = "error happened";
@@ -135,15 +145,7 @@ class  ClientHandler implements Runnable {
                 }
 
 
-                assert received != null;
-                    if (received.equals("logout")) {
-                        System.out.println("Client " + this.name + " logged out");
-                        isLoggedIn = false;
-                        this.socket.close();
 
-                        break;
-
-                    }
 
 
 

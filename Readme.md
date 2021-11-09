@@ -9,6 +9,7 @@ It's still under development.
 This is just a pure java project on socket programming.
 ##
 Few GuideLines:
+        
           1. Run server.java
           2. Run Client.java as many as you like(at least two instances)
           4. See the prompt on terminal or console

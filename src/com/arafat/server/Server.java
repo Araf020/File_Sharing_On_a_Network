@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -97,12 +98,13 @@ class  ClientHandler implements Runnable {
     private  String name;
     private  Socket socket;
     int flag ;
+    int flag_1;
     final ObjectOutputStream dataOutputStream;
     final ObjectInputStream dataInputStream;
     boolean isLoggedIn;
     private Cipher serverDecryptCiph;
     private Cipher serverEncryptCiph;
-
+    private Message encryptedAESkey;
     private Cipher keyDecipher;
     private SecretKey AESKey;
     static String IV = "AAAAAAAAAAAAAAAA";
@@ -115,6 +117,7 @@ class  ClientHandler implements Runnable {
         this.name = name;
         this.isLoggedIn = true;
         this.flag = 0;
+        this.flag_1 = 0;
         System.out.println("client handler initiated for "+ this.name);
 
     }
@@ -140,6 +143,7 @@ class  ClientHandler implements Runnable {
                 rcvdmsg = (Message) dataInputStream.readObject();
 
                 if (flag ==0){
+                    this.encryptedAESkey = rcvdmsg;
                     if (rcvdmsg.getData() != null){
                         decryptAESKey(rcvdmsg.getData());
                         flag++;
@@ -182,6 +186,7 @@ class  ClientHandler implements Runnable {
                     //process the message
                     StringTokenizer stringTokenizer = new StringTokenizer(received, ":");
                     String msg = stringTokenizer.nextToken();
+
                     String sendTo = stringTokenizer.nextToken();
                     System.out.println("After decryption:::: " + "destination:" + sendTo + "> message: " + msg);
 
@@ -194,8 +199,22 @@ class  ClientHandler implements Runnable {
 //                        client.dataOutputStream.writeUTF(this.name + ": " + msg);
                             String finalMsg = this.name + ": " + msg;
 
+
                             try {
-                                write(new Message(encryptMessage(finalMsg)),client.dataOutputStream);
+
+//                                if (flag_1 == 0){
+                                    //send the AESkey
+//                                    write(encryptedAESkey,client.dataOutputStream);
+//                                    wait(500);
+//                                   System.out.println("AES key sent");
+//                                    flag_1 = 1;
+
+//                                }
+//                                else
+                                     //send the message
+//                                     write(new Message(encryptMessage(finalMsg)),client.dataOutputStream);
+//
+                                write(new DataPack(encryptMessage(finalMsg),encryptedAESkey.getData()),client.dataOutputStream);
                             } catch (Exception e) {
                                 System.out.println("Error at encrypting: " + e.getMessage());
                             }
@@ -222,10 +241,10 @@ class  ClientHandler implements Runnable {
 
         }
     }
-    public synchronized void write(Message msg, ObjectOutputStream objectOutputStream){
+    public synchronized void write(DataPack dataPack, ObjectOutputStream objectOutputStream){
         try {
             System.out.println("writing on stream");
-            objectOutputStream.writeObject(msg);
+            objectOutputStream.writeObject(dataPack);
             objectOutputStream.reset();
 
         } catch (IOException e) {
@@ -234,7 +253,27 @@ class  ClientHandler implements Runnable {
     }
 
 
+    private byte[] encryptAESKey(){
+        Cipher ciph = null;
+        byte[] key = null;
 
+        try {
+            PublicKey pk = readPublicKeyFromFile("public.key");
+            System.out.println("Encrypting the AES key");
+
+            ciph = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            ciph.init(Cipher.ENCRYPT_MODE,pk);
+            key = ciph.doFinal(this.AESKey.getEncoded());
+            System.out.println("AESKey encryption completed");
+//            flag = 1;
+        }
+        catch (Exception e){
+            System.out.println("Error encrypting AESKey :"+ e.getMessage());;
+
+        }
+
+        return key;
+    }
     private void decryptAESKey(byte[] encryptedKey){
         SecretKey key = null;
         PrivateKey privateKey = null;
@@ -274,6 +313,22 @@ class  ClientHandler implements Runnable {
             throw new RuntimeException("Some error in reading private key", e);
         }
 
+    }
+    
+    PublicKey readPublicKeyFromFile(String fileName) throws IOException {
+
+        FileInputStream in = new FileInputStream(fileName);
+
+        try (ObjectInputStream oin = new ObjectInputStream(new BufferedInputStream(in))) {
+            BigInteger m = (BigInteger) oin.readObject();
+            BigInteger e = (BigInteger) oin.readObject();
+            RSAPublicKeySpec keySpecifications = new RSAPublicKeySpec(m, e);
+
+            KeyFactory kF = KeyFactory.getInstance("RSA");
+            return kF.generatePublic(keySpecifications);
+        } catch (Exception e) {
+            throw new RuntimeException("Some error in reading public key", e);
+        }
     }
 
     private String decryptMessage(byte[] encryptedMessage) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
